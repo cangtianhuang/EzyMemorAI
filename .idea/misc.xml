@@ -4,4 +4,7 @@
     <option name="sdkName" value="D:\Tools\anaconda3" />
   </component>
   <component name="ProjectRootManager" version="2" project-jdk-name="agi-env" project-jdk-type="Python SDK" />
+  <component name="WebPackConfiguration">
+    <option name="mode" value="AUTO" />
+  </component>
 </project>

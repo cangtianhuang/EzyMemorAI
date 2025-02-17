@@ -1,0 +1,56 @@
+/* src/assets/styles.css */
+:root {
+  --primary-color: #2563eb;
+  --success-color: #10b981;
+  --danger-color: #ef4444;
+  --text-color: #1f2937;
+  --bg-color: #f3f4f6;
+  --card-bg: #ffffff;
+  --sidebar-bg-color: #f8fafc;
+  --chat-user-color: #4b5563;
+  --chat-user-bg: #bbf7d0;
+  --chat-ai-bg: #c7d2fe;
+  --scrollbar-thumb-color: #d1d5db;
+  --scrollbar-track-color: #f3f4f6;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  line-height: 1.5;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  margin: 0;
+  overflow: hidden;
+}
+
+.btn {
+  padding: 0.75rem 1.5rem;
+  font-weight: 500;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.btn-init {
+  background-color: var(--success-color);
+  color: white;
+}
+
+.btn-init:hover {
+  background-color: #059669;
+  color: white;
+}
+
+.btn-unlock {
+  background-color: var(--danger-color);
+  color: white;
+}
+
+.btn-unlock:hover {
+  background-color: #dc2626;
+  color: black;
+}
+
+/* 其他全局样式 */
