@@ -1,39 +1,39 @@
-<!-- src/App.vue -->
 <template>
-  <div id="app">
-    <Header />
-    <div class="main-content">
-      <Sidebar />
-      <div class="content-wrapper">
-        <router-view />
-      </div>
-    </div>
-    <ToastContainer />
-  </div>
+  <main-layout v-if="!isWelcomePage">
+    <router-view />
+  </main-layout>
+  <router-view v-else />
 </template>
 
-<script>
-import Header from './components/Header.vue';
-import Sidebar from './components/Sidebar.vue';
-import ToastContainer from './components/ToastContainer.vue';
+<script setup>
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
+import MainLayout from '@/layouts/MainLayout.vue'
 
-export default {
-  components: {
-    Header,
-    Sidebar,
-    ToastContainer,
-  },
-};
+const route = useRoute()
+const isWelcomePage = computed(() => route.name === 'Welcome')
 </script>
 
 <style>
-.main-content {
-  display: flex;
-  height: calc(100vh - 64px);
+@import '@/styles/tailwind.css';
+
+#app {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
 }
 
-.content-wrapper {
-  flex: 1;
-  overflow-y: auto;
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 </style>

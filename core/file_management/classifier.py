@@ -1,11 +1,13 @@
 from langchain.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import JsonOutputParser
+from langchain_core.runnables import RunnableLambda
 from langchain_openai import ChatOpenAI
 
 from config.config import Config
 
 
 class AIClassifier:
+    """AI文件整理类，用于生成文件整理方案"""
     def __init__(self):
         self.llm = ChatOpenAI(
             model=Config.LLM_MODEL,
@@ -71,9 +73,18 @@ JSON:
 
     async def classify(self, dir_tree: str, content: str) -> dict:
         """调用AI生成整理方案"""
+        def runnable_print(x):
+            print(x)
+            return x
+
         print("\n" + dir_tree)
         print("\n" + content)
-        chain = self.prompt_template | self.llm | (lambda x: print(x) or x) | JsonOutputParser()
+        chain = (
+                self.prompt_template
+                | self.llm
+                | RunnableLambda(runnable_print)
+                | JsonOutputParser()
+        )
         try:
             return await chain.ainvoke({
                 "dir_tree": dir_tree,

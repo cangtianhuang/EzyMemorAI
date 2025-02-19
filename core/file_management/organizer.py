@@ -1,26 +1,25 @@
-import errno
 import os
 import stat
 import shutil
-import tempfile
 from pathlib import Path
+from typing import Optional, TYPE_CHECKING
 
 from langchain_core.output_parsers import JsonOutputParser
 
 from core.file_management.classifier import AIClassifier
-from core.file_management.parser import FileParser
 
+if TYPE_CHECKING:
+    from core.file_management.parser import FileParser
 
 class FileOrganizer:
-    """文件整理器"""
+    """文件整理类"""
     def __init__(self):
-        # self.vector_db = vector_db
         self.classifier = AIClassifier()
-        self.parser = FileParser()
 
-    async def generate_dir_tree(self, directory: str, understand_content: bool = False) -> tuple[str, str, dict]:
+    async def generate_classify(self, directory: str, understand_content: bool = False, parser: Optional['FileParser'] = None) -> tuple[str, str, dict]:
         """
         生成目录树
+        :param parser:  文件解析器
         :param directory: 目录路径
         :param understand_content:  是否理解文件内容
         :return:  (原目录树, 推荐目录树, AI分类结果)
@@ -48,7 +47,7 @@ class FileOrganizer:
                     rel_path = item.relative_to(directory)
                     file_paths[item.name] = str(rel_path)
                     if understand_content:
-                        summary = self.parser.brief(str(item.resolve()))
+                        summary = parser.brief(str(item.resolve()))
                         content.append(f"{item.name}: {summary}")
                     else:
                         content.append(f"{item.name}")
@@ -97,6 +96,39 @@ class FileOrganizer:
         classify_out["source_dir"] = directory.resolve()
 
         return dir_tree, proposed_dir_tree, classify_out
+
+    def get_dir_tree(self, directory: str) -> tuple[str, dict]:
+        directory = Path(directory)
+        dir_tree = [str(directory.name) + "/"]  # 保留根目录
+        file_paths = {}
+
+        # 递归遍历目录
+        def _walk_directory(current_path: Path, prefix: str = "", is_last: bool = True) -> None:
+            items = sorted(current_path.iterdir(),
+                           key=lambda x: (not x.is_dir(), x.name))
+
+            for i, item in enumerate(items):
+                is_last = (i == len(items) - 1)
+                current_prefix = prefix + ("└── " if is_last else "├── ")
+                next_prefix = prefix + ("    " if is_last else "│   ")
+
+                if item.is_dir():
+                    dir_tree.append(f"{current_prefix}{item.name}/")
+                    _walk_directory(item, next_prefix, is_last)
+                else:
+                    dir_tree.append(f"{current_prefix}{item.name}")
+                    file_paths[item.name] = str(item.resolve())
+
+        _walk_directory(directory)
+        dir_tree = "\n".join(dir_tree)
+
+        return dir_tree, file_paths
+
+    def get_file_briefs(self, file_paths: dict) -> dict:
+        briefs = {}
+        for file_name, file_path in file_paths.items():
+            briefs[file_name] = self.parser.brief(file_path)
+        return briefs
 
     def execute_classify(self, directory: str, classify_out: dict) -> bool:
         """
@@ -190,28 +222,3 @@ class FileOrganizer:
             if not new_path.exists():
                 return new_path
             counter += 1
-
-
-    # async def process_file(self, file_path: str, dir_tree: str) -> dict:
-    #     """文件处理全流程"""
-    #     # 解析文件
-    #     parsed = self.parser.parse(file_path)
-    #
-    #     # 存储到向量数据库
-    #     self.vector_db.upsert(parsed["content"])
-    #
-    #     # 获取AI整理方案
-    #     ai_response = await self.classifier.generate_new_path(
-    #         dir_tree=dir_tree,
-    #         content=parsed["content"][0].page_content  # 取第一段内容
-    #     )
-    #
-    #     # 执行文件操作
-    #     new_path = self._safe_move(file_path, ai_response["new_path"])
-    #
-    #     return {
-    #         "original": file_path,
-    #         "new_path": new_path,
-    #         "metadata": parsed["metadata"],
-    #         "ai_reason": ai_response["reason"]
-    #     }

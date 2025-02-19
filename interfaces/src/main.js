@@ -1,7 +1,27 @@
-import { createApp } from 'vue';
-import App from './App.vue';
-import router from './router';
-import './assets/styles.css'; // 全局样式
-import 'bootstrap/dist/css/bootstrap.min.css'; // 引入Bootstrap样式
+import { createApp } from 'vue'
+import { createPinia } from 'pinia'
+import App from './App.vue'
+import router from './router'
+import './styles/index.css'
 
-createApp(App).use(router).mount('#app');
+// Create Vue application instance
+const app = createApp(App)
+
+// Install plugins
+app.use(createPinia())
+app.use(router)
+
+// Error handling
+app.config.errorHandler = (err, vm, info) => {
+  console.error('Global error:', err)
+  console.error('Vue instance:', vm)
+  console.error('Error info:', info)
+}
+
+// Mount application
+app.mount('#app')
+
+// Development only
+if (import.meta.env.DEV) {
+  console.log('Running in development mode')
+}

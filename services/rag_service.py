@@ -1,42 +1,46 @@
-from typing import Any
+from typing import Optional
 
-from langchain.prompts import ChatPromptTemplate
-from langchain_core.output_parsers import StrOutputParser
-from langchain_core.runnables import RunnablePassthrough, RunnableSerializable
-from langchain_core.vectorstores import VectorStoreRetriever
+from core.knowledge_base.querier import Querier
+from core.knowledge_base.vector_db import VectorDB
 
 
 class RagService:
+    """RAG 服务类，提供问答功能"""
+    def __init__(self, vector_db: Optional[VectorDB] = None):
+        self.vector_db = VectorDB() if vector_db is None else vector_db
+        self.querier = None
+        self.file_service = None
 
-    search_prompt = ChatPromptTemplate.from_messages([
-        ("system", """你是一个专业的文档问答助手，请基于检索到的文档内容，准确简洁地回答用户问题。
-回答要求：
-1. 保持简洁，尽量不超过3句话
-2. 直接给出答案，无需重复问题
-3. 引用信息来源（具体文件名与页码）
-4. 严格基于检索内容回答，不添加任何其他信息
-5. 如果找不到答案，请明确告知无法回答"""),
+    def set_file_service(self, file_service):
+        self.file_service = file_service
 
-        ("human", "检索内容：\n{context}\n\n用户问题：\n{question}")
-    ])
+    async def chat(self):
+        if self.querier is None:
+            self.querier = Querier(self.vector_db)
+        while True:
+            question = input("请输入问题（quit退出）：")
+            if question == "quit":
+                break
+            answer = await self.querier.search(question)
+            print(f"回答：{answer}")
 
-    def __init__(self):
-        self.qa_chain = None
-        self.llm = None
-        self.prompt = None
+    async def chat_stream(self):
+        if self.querier is None:
+            self.querier = Querier(self.vector_db)
+        while True:
+            question = input("请输入问题（quit退出）：")
+            if question == "quit":
+                break
+            print("回答：", end="", flush=True)
+            async for chunk in self.querier.stream_search(question):
+                print(chunk, end="", flush=True)
+            print()
 
-    def create_chain(self, retriever: VectorStoreRetriever) -> RunnableSerializable:
-        self.qa_chain = (
-                {
-                    "question": RunnablePassthrough(),
-                    "context": retriever
-                }
-                | (lambda x: print(x) or x)
-                | self.prompt
-                | self.llm
-                | StrOutputParser()
-        )
-        return self.qa_chain
+    def load_directory(self, folder_path: str):
+        if self.file_service:
+            self.file_service.load_directory(folder_path)
 
-    def search(self, question: str) -> Any:
-        return self.qa_chain.invoke(question)
+    def generate_response(self, question: str):
+        if self.querier is None:
+            self.querier = Querier(self.vector_db)
+        return self.querier.search(question)

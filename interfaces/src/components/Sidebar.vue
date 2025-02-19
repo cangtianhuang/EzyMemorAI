@@ -1,63 +1,95 @@
-<!-- src/components/Sidebar.vue -->
 <template>
-  <aside class="sidebar">
+  <div class="sidebar">
+    <div class="logo">
+      <img src="@/assets/logo.png" alt="Logo" />
+      <span>EzyMemor AI</span>
+    </div>
     <nav>
       <ul>
-        <li>
-          <router-link to="/" exact-active-class="active">欢迎</router-link>
+        <li :class="{ active: isActive('/') }">
+          <router-link to="/">Welcome</router-link>
         </li>
-        <li>
-          <router-link to="/init" active-class="active">初始化 AI</router-link>
+        <li :class="{ active: isActive('/chat') }">
+          <router-link to="/chat">Intelligent Chat</router-link>
         </li>
-        <li>
-          <router-link to="/chat" active-class="active">聊天界面</router-link>
+        <li :class="{ active: isActive('/file-sorting') }">
+          <router-link to="/file-sorting">File Sorting</router-link>
         </li>
-        <li>
-          <router-link to="/filesorting" active-class="active">文件智能整理</router-link>
+        <li :class="{ active: isActive('/monitoring') }">
+          <router-link to="/monitoring">Monitoring</router-link>
         </li>
-        <li>
-          <router-link to="/settings" active-class="active">设置</router-link>
+        <li :class="{ active: isActive('/settings') }">
+          <router-link to="/settings">Settings</router-link>
         </li>
       </ul>
     </nav>
-  </aside>
+  </div>
 </template>
 
 <script>
+import { useRoute } from 'vue-router';
+
 export default {
-  name: 'Sidebar',
+  setup() {
+    const route = useRoute();
+    const isActive = (path) => route.path === path;
+
+    return { isActive };
+  },
 };
 </script>
 
 <style scoped>
 .sidebar {
   width: 200px;
-  background-color: var(--sidebar-bg-color);
-  padding: 1rem;
-  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.05);
+  background-color: #2c3e50;
+  color: #ecf0f1;
+  height: 100vh;
+  position: fixed;
+  left: 0;
+  top: 0;
+  padding-top: 16px;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  margin-bottom: 24px;
+}
+
+.logo img {
+  width: 32px;
+  height: 32px;
+  margin-right: 8px;
+}
+
+.logo span {
+  font-size: 18px;
+  font-weight: bold;
 }
 
 nav ul {
-  list-style: none;
+  list-style-type: none;
   padding: 0;
-  margin: 0;
 }
 
 nav li {
-  margin-bottom: 1rem;
+  margin-bottom: 12px;
 }
 
-nav a {
-  color: var(--text-color);
+nav li a {
+  color: inherit;
   text-decoration: none;
-  font-weight: 500;
+  display: block;
+  padding: 8px 16px;
 }
 
-nav a.active {
-  color: var(--primary-color);
+nav li.active {
+  background-color: #34495e;
 }
 
-nav a:hover {
-  color: var(--primary-color);
+nav li a:hover {
+  background-color: #34495e;
 }
 </style>

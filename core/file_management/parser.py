@@ -1,9 +1,12 @@
 import os
 from datetime import datetime
 from pathlib import Path
+from typing import List
 
 from langchain_community.document_loaders import PyPDFLoader, Docx2txtLoader, TextLoader, CSVLoader, \
     UnstructuredExcelLoader, UnstructuredPowerPointLoader, UnstructuredHTMLLoader, JSONLoader, UnstructuredFileLoader
+from langchain_core.documents import Document
+from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI
 from langchain_text_splitters import RecursiveCharacterTextSplitter
@@ -12,7 +15,7 @@ from config.config import Config
 
 
 class FileParser:
-    """文件解析器"""
+    """文件解析类，提供文件解析、摘要功能"""
 
     def __init__(self):
         self.splitter = RecursiveCharacterTextSplitter(
@@ -31,28 +34,27 @@ class FileParser:
             ),
             ("human", "{file_name}: {content}"),
         ])
+        self.chain = self.prompt_template | self.llm | StrOutputParser()
 
-    def parse(self, file_path: str) -> dict:
+    def parse(self, file_path: str) -> List[Document]:
         """解析文件内容并分割成documents"""
         documents = []
         path_suffix = Path(file_path).suffix
-        if path_suffix.endswith(".pdf"):
-            loader = PyPDFLoader(file_path)  # 存在跨页信息丢失的问题，考虑自定义pdf加载器。
+        if path_suffix in [".pdf"]:
+            loader = PyPDFLoader(file_path)
             documents.extend(loader.load())
-        elif path_suffix.endswith(".docx"):
+        elif path_suffix in [".doc", ".docx"]:
             loader = Docx2txtLoader(file_path)
             documents.extend(loader.load())
-        else:
+        elif path_suffix in [".txt"]:
             loader = TextLoader(file_path, autodetect_encoding=True)
             documents.extend(loader.load())
-        return {
-            "content": self.splitter.split_documents(documents),
-            "metadata": {
-                "file_type": file_path.split('.')[-1],
-                "size": os.path.getsize(file_path),
-                "created_time": datetime.fromtimestamp(os.path.getctime(file_path))
-            }
-        }
+        elif path_suffix in [".csv"]:
+            loader = CSVLoader(file_path)
+            documents.extend(loader.load())
+        else:
+            print(f"暂不支持的文件类型：{file_path}")
+        return self.splitter.split_documents(documents)
 
     def brief(self, file_path: str) -> str:
         """获取文件摘要"""
@@ -82,9 +84,4 @@ class FileParser:
         if not summary_content:
             return "无法解析文件内容"
 
-        prompt = self.prompt_template.format_messages(
-            file_name=file_name,
-            content=summary_content
-        )
-        summary = self.llm.invoke(prompt)
-        return summary.content
+        return self.chain.invoke({"file_name": file_name, "content": summary_content})
