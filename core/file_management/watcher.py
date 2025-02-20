@@ -44,6 +44,10 @@ class FileWatcher:
     def stop_all(self):
         self.observer.stop()
         self.observer.join()
+        self.watchers.clear()
 
     def get_all_watched_paths(self):
         return sorted(list(self.watchers.keys()))
+
+    def __del__(self):
+        self.stop_all()

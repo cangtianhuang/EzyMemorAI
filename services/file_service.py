@@ -78,6 +78,15 @@ class FileService:
     def get_monitored_paths(self):
         return self.watcher.get_all_watched_paths()
 
+    def show_monitored_paths(self):
+        paths = self.get_monitored_paths()
+        if not paths:
+            print("当前没有监听的文件夹。")
+            return
+        print("当前监听的文件夹：")
+        for path in paths:
+            print(path)
+
     def add_monitored_path(self, folder_path: str):
         return self.watcher.start_watching(folder_path, self.processor)
 
